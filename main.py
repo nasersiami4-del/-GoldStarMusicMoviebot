@@ -1,60 +1,36 @@
 import os
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from flask import Flask, request
+import telebot
 
-# ÑÝÊä ãÊÛíÑåÇ ÇÒ ãÍíØ (Railway)
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "135019937"))
-PUBLIC_CHANNEL_ID = os.getenv("PUBLIC_CHANNEL_ID")
-PRIVATE_CHANNEL_ID = os.getenv("PRIVATE_CHANNEL_ID")
+# گرفتن توکن از Environment Variables
+TOKEN = os.environ.get("BOT_TOKEN")
+if not TOKEN:
+    raise ValueError("❌ BOT_TOKEN در Environment Variables تنظیم نشده")
 
-# ÐÎíÑå ÝÇíáåÇ ÏÑ í˜ Ïí˜ÔäÑí ÓÇÏå
-series_data = {}
+bot = telebot.TeleBot(TOKEN)
+app = Flask(__name__)
 
-# ÝÞØ ÇÏãíä
-def is_admin(user_id):
-    return user_id == ADMIN_ID
+# پاسخ ساده برای تست
+@bot.message_handler(func=lambda message: True)
+def handle_message(message):
+    bot.reply_to(message, f"سلام {message.from_user.first_name} 👋\nربات فعاله ✅")
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ÓáÇã! Çíä ÑÈÇÊ ãÎÕæÕ ÇÑÓÇá ÓÑíÇáåÇÓÊ ??")
+# مسیر دریافت آپدیت‌ها (Webhook)
+@app.route(f'/{TOKEN}', methods=['POST'])
+def webhook():
+    update = telebot.types.Update.de_json(request.get_json(force=True))
+    bot.process_new_updates([update])
+    return "OK", 200
 
-async def add_series(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not is_admin(update.message.from_user.id):
-        return await update.message.reply_text("ÔãÇ ÏÓÊÑÓí äÏÇÑíÏ ?")
-
-    if len(context.args) < 2:
-        return await update.message.reply_text("ÇÓÊÝÇÏå: /add äÇã_ÓÑíÇá áíä˜1,áíä˜2,...")
-
-    name = context.args[0]
-    links = " ".join(context.args[1:]).split(",")
-    series_data[name] = links
-    await update.message.reply_text(f"? ÓÑíÇá '{name}' ÈÇ {len(links)} ÞÓãÊ ÇÖÇÝå ÔÏ.")
-
-async def list_series(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not series_data:
-        return await update.message.reply_text("?? åí ÓÑíÇáí ËÈÊ äÔÏå.")
-
-    keyboard = [
-        [InlineKeyboardButton(name, callback_data=f"series_{name}")]
-        for name in series_data
-    ]
-    await update.message.reply_text("?? áíÓÊ ÓÑíÇáåÇ:", reply_markup=InlineKeyboardMarkup(keyboard))
-
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-
-    if query.data.startswith("series_"):
-        name = query.data.split("_", 1)[1]
-        links = series_data.get(name, [])
-        for link in links:
-            await context.bot.send_message(chat_id=query.from_user.id, text=link)
+# تنظیم وبهوک به محض بالا اومدن سرور
+@app.before_first_request
+def set_webhook():
+    hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+    if not hostname:
+        raise ValueError("❌ RENDER_EXTERNAL_HOSTNAME تنظیم نشده")
+    bot.remove_webhook()
+    bot.set_webhook(url=f"https://{hostname}/{TOKEN}")
+    print(f"✅ Webhook set to https://{hostname}/{TOKEN}")
 
 if __name__ == "__main__":
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("add", add_series))
-    app.add_handler(CommandHandler("list", list_series))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    app.run_polling()
-
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
