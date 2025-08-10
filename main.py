@@ -6,7 +6,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, Cal
 # ==============================
 # تنظیمات ربات
 # ==============================
-BOT_TOKEN = "توکن_ربات"
+BOT_TOKEN = "8360522775:AAEUbSR_S7_mM7RPPMfkv6yk6WBXPiSy2sY"
 PUBLIC_CHANNEL_ID = -1001081524118
 PRIVATE_CHANNEL_ID = -1001311582958
 ADMIN_IDS = [135019937]  # فقط ادمین اصلی
