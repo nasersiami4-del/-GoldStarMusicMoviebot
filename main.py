@@ -2,43 +2,43 @@ import os
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
-# ê—› ‰ „ €Ì—Â« «“ „ÕÌÿ (Railway)
+# ¬ê√ë√ù√ä√§ √£√ä√õ√≠√ë√•√á √á√í √£√ç√≠√ò (Railway)
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", "135019937"))
 PUBLIC_CHANNEL_ID = os.getenv("PUBLIC_CHANNEL_ID")
 PRIVATE_CHANNEL_ID = os.getenv("PRIVATE_CHANNEL_ID")
 
-# –ŒÌ—Â ›«Ì·ùÂ« œ— Ìò œÌò‘‰—Ì ”«œÂ
+# √ê√é√≠√ë√• √ù√á√≠√°¬ù√•√á √è√ë √≠Àú √è√≠Àú√î√§√ë√≠ √ì√á√è√•
 series_data = {}
 
-# ›ﬁÿ «œ„Ì‰
+# √ù√û√ò √á√è√£√≠√§
 def is_admin(user_id):
     return user_id == ADMIN_ID
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("”·«„! «Ì‰ —»«  „Œ’Ê’ «—”«· ”—Ì«·ùÂ«”  ??")
+    await update.message.reply_text("√ì√°√á√£! √á√≠√§ √ë√à√á√ä √£√é√ï√¶√ï √á√ë√ì√á√° √ì√ë√≠√á√°¬ù√•√á√ì√ä ??")
 
 async def add_series(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_admin(update.message.from_user.id):
-        return await update.message.reply_text("‘„« œ” —”Ì ‰œ«—Ìœ ?")
+        return await update.message.reply_text("√î√£√á √è√ì√ä√ë√ì√≠ √§√è√á√ë√≠√è ?")
 
     if len(context.args) < 2:
-        return await update.message.reply_text("«” ›«œÂ: /add ‰«„_”—Ì«· ·Ì‰ò1,·Ì‰ò2,...")
+        return await update.message.reply_text("√á√ì√ä√ù√á√è√•: /add √§√á√£_√ì√ë√≠√á√° √°√≠√§Àú1,√°√≠√§Àú2,...")
 
     name = context.args[0]
     links = " ".join(context.args[1:]).split(",")
     series_data[name] = links
-    await update.message.reply_text(f"? ”—Ì«· '{name}' »« {len(links)} ﬁ”„  «÷«›Â ‘œ.")
+    await update.message.reply_text(f"? √ì√ë√≠√á√° '{name}' √à√á {len(links)} √û√ì√£√ä √á√ñ√á√ù√• √î√è.")
 
 async def list_series(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not series_data:
-        return await update.message.reply_text("?? ÂÌç ”—Ì«·Ì À»  ‰‘œÂ.")
+        return await update.message.reply_text("?? √•√≠¬ç √ì√ë√≠√á√°√≠ √ã√à√ä √§√î√è√•.")
 
     keyboard = [
         [InlineKeyboardButton(name, callback_data=f"series_{name}")]
         for name in series_data
     ]
-    await update.message.reply_text("?? ·Ì”  ”—Ì«·ùÂ«:", reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text("?? √°√≠√ì√ä √ì√ë√≠√á√°¬ù√•√á:", reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -57,3 +57,4 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("list", list_series))
     app.add_handler(CallbackQueryHandler(button_handler))
     app.run_polling()
+
